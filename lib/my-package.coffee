@@ -1,6 +1,11 @@
 MyPackageView = require './my-package-view'
 {CompositeDisposable} = require 'atom'
 
+setContent = (myPackageView) ->
+  editor = atom.workspace.getActiveTextEditor()
+  words = editor.getText().split(/\n/)
+  myPackageView.setView(words)
+
 module.exports = MyPackage =
   myPackageView: null
   modalPanel: null
@@ -30,7 +35,5 @@ module.exports = MyPackage =
     if @modalPanel.isVisible()
       @modalPanel.hide()
     else
-      editor = atom.workspace.getActiveTextEditor()
-      words = editor.getText().split(/\s+/).length
-      @myPackageView.setCount(words)
+      setContent(@myPackageView)
       @modalPanel.show()

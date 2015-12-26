@@ -4,11 +4,14 @@
   "version": "0.0.0",
   "description": "A short description of your package",
   "keywords": [
+    "auto",
+    "css",
+    "skeleton"
   ],
   "activationCommands": {
     "atom-workspace": "my-package:toggle"
   },
-  "repository": "https://github.com/atom/my-package",
+  "repository": "https://github.com/sypme/auto-css-skeleton",
   "license": "MIT",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"
