@@ -30,4 +30,7 @@ module.exports = MyPackage =
     if @modalPanel.isVisible()
       @modalPanel.hide()
     else
+      editor = atom.workspace.getActiveTextEditor()
+      words = editor.getText().split(/\s+/).length
+      @myPackageView.setCount(words)
       @modalPanel.show()
