@@ -7,6 +7,13 @@ unique = (array) ->
       uniqueArray.push(value)
   return uniqueArray
 
+#現在のオブジェクトの親のオブジェクトを参照するメソッド
+parantObject　= (cson,stack) ->
+  nowobject = cson
+  for objName in stack
+    nowobject = nowobject[objName]
+  return nowobject
+
 module.exports =
 class MyPackageView
   constructor: (serializedState) ->
@@ -32,24 +39,41 @@ class MyPackageView
 
   setView: (words) ->
     tagFlag = false
-    closeTag = /<[^\/!]/
-    displayText = []
-    tagArr = []
+    commentFlag = false
+    commentTag = /<!/
+    cson = {}
+    nowobject = cson
+    stack = []
     for word in words
+      match = word.match(/<!-*/)
+      if match then continue
       tagword = ""
       for c in word
-        if c == "<"
+        if c == ">"
+          tagFlag = false
+          tagword += c                  #>を追加
+          stackword = stack.slice(-1)
+          stackword = stackword.toString().split(/\s/)
+          closeTag = new RegExp("<\/"+stackword[0])
+          match = tagword.match(closeTag)
+          if match? #閉じタグが一番下の層と一致したら
+            stack.pop() #スタックから一つ取り出す
+            console.log stack
+            console.log JSON.stringify(cson)
+            nowobject = parantObject(cson,stack)  #親のオブジェクトに移動
+          else  #一致しなかったら
+            tagword = tagword[1..-2] #<>を切り取る
+            nowobject[tagword] = {}
+            nowobject = nowobject[tagword]
+            stack.push(tagword)
+            console.log stack
+            console.log JSON.stringify(cson)
+          tagword = ""
+        else if c == "<"
           tagword += c
           tagFlag = true
-        else if c == ">"
-          tagword += c
-          tagFlag = false
-          match = tagword.match(closeTag)
-          if match? then tagArr.push("#{tagword}")
-          tagword = ""
         else
           if tagFlag #tagの中
             tagword += c
-          #tagの外の場合は何もしない
-    displayText = unique(tagArr)
-    @element.children[0].textContent = displayText.join("\n")
+    console.log JSON.stringify(cson)
+    @element.children[0].textContent = JSON.stringify(cson)
