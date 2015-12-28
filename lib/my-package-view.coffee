@@ -1,17 +1,8 @@
-#↓使用していないメソッド
-# unique = (array) ->
-#   storage = {}
-#   uniqueArray = []
-#   for value in array
-#     if !(value of storage)
-#       storage[value] = true
-#       uniqueArray.push(value)
-#   return uniqueArray
-
 #閉じタグが要らないタグ
 nonCloseTag = [
   "br",
   "img",
+  "hr",
   "meta",
   "input",
   "embed",
@@ -31,6 +22,18 @@ examNonCloseTag = (word) ->
     return true
   else
     return false
+
+#コメントタグか調べる
+examCommentTag = (word) ->
+  match = word.match(/^!--/)
+  if match?
+  else
+    return "noncomment"
+  match = word.match(/^!--.*--$/)
+  if match?
+    return "commentFin"
+  else
+    return "commenting"
 
 #現在のオブジェクトの親のオブジェクトを参照するメソッド
 moveParantObject　= (cson,stack) ->
@@ -67,14 +70,23 @@ class MyPackageView
     cson = {}
     nowobject = cson
     stack = []
+    commentFlag = "noncomment"
     for line in lines
-      match = line.match(/<!-*/)
+      match = line.match(/<!DOCTYPE/) #ドキュメントタイプ宣言とばす
       if match? then continue
       tagword = ""
       for c in line
         if c == ">"
           tagFlag = false
-          if examNonCloseTag(tagword) then continue #閉じタグか調査する
+          if examNonCloseTag(tagword)
+            tagword = ""
+            continue
+          commentFlag = examCommentTag(tagword)
+          if commentFlag == "commentFin"
+            tagword = ""
+            continue
+          else if commentFlag == "commenting"
+            continue
           stackword = stack.slice(-1)
           stackword = stackword.toString().split(/\s/)[0]
           closeTag = new RegExp("\/"+stackword)
