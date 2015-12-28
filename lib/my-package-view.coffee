@@ -1,11 +1,12 @@
-unique = (array) ->
-  storage = {}
-  uniqueArray = []
-  for value in array
-    if !(value of storage)
-      storage[value] = true
-      uniqueArray.push(value)
-  return uniqueArray
+#↓使用していないメソッド
+# unique = (array) ->
+#   storage = {}
+#   uniqueArray = []
+#   for value in array
+#     if !(value of storage)
+#       storage[value] = true
+#       uniqueArray.push(value)
+#   return uniqueArray
 
 #現在のオブジェクトの親のオブジェクトを参照するメソッド
 parantObject　= (cson,stack) ->
@@ -58,16 +59,16 @@ class MyPackageView
           match = tagword.match(closeTag)
           if match? #閉じタグが一番下の層と一致したら
             stack.pop() #スタックから一つ取り出す
-            console.log stack
-            console.log JSON.stringify(cson)
+            # console.log stack
+            # console.log JSON.stringify(cson)
             nowobject = parantObject(cson,stack)  #親のオブジェクトに移動
           else  #一致しなかったら
             tagword = tagword[1..-2] #<>を切り取る
             nowobject[tagword] = {}
             nowobject = nowobject[tagword]
             stack.push(tagword)
-            console.log stack
-            console.log JSON.stringify(cson)
+            # console.log stack
+            # console.log JSON.stringify(cson)
           tagword = ""
         else if c == "<"
           tagword += c
