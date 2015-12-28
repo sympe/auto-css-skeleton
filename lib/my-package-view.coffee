@@ -10,7 +10,6 @@ nonCloseTag = [
   "base",
   "col",
   "keygen",
-  "link",
   "param",
   "source"
 ]
@@ -41,6 +40,28 @@ moveParantObject　= (cson,stack) ->
   for objName in stack
     nowobject = nowobject[objName]
   return nowobject
+
+#headタグを走査して抜き取る
+getHeadTag = (cson) ->
+  runObject = cson
+  if "head" of runObject
+    head = { "head" : Object.keys(runObject["head"]) }
+    return head
+  else
+    propaties = Object.keys(runObject)
+    for propaty in propaties
+      return getHeadTag(runObject[propaty])
+
+#bodyタグを走査して抜き取る
+getBodyTag = (cson) ->
+  runObject = cson
+  if "body" of runObject
+    body = { "body" : runObject["body"] }
+    return body
+  else
+    propaties = Object.keys(runObject)
+    for propaty in propaties
+      return getBodyTag(runObject[propaty])
 
 module.exports =
 class MyPackageView
@@ -87,6 +108,11 @@ class MyPackageView
             continue
           else if commentFlag == "commenting"
             continue
+          match = tagword.match(/link.+(css)+/) #cssタグだったら
+          if match?
+            nowobject[tagword] = {}
+            tagword = ""
+            continue
           stackword = stack.slice(-1)
           stackword = stackword.toString().split(/\s/)[0]
           closeTag = new RegExp("\/"+stackword)
@@ -108,5 +134,10 @@ class MyPackageView
         else
           if tagFlag #tagの中
             tagword += c
-    console.log JSON.stringify(cson)
+
+    #headタグ抜き取る
+    head = getHeadTag(cson)
+    body = getBodyTag(cson)
+    console.log JSON.stringify(head)
+    console.log JSON.stringify(body)
     @element.children[0].textContent = JSON.stringify(cson)

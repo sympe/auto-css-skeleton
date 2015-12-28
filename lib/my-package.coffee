@@ -30,7 +30,6 @@ module.exports = MyPackage =
     myPackageViewState: @myPackageView.serialize()
 
   toggle: ->
-    console.log 'MyPackage was toggled!'
 
     if @modalPanel.isVisible()
       @modalPanel.hide()
