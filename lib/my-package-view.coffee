@@ -8,8 +8,32 @@
 #       uniqueArray.push(value)
 #   return uniqueArray
 
+#閉じタグが要らないタグ
+nonCloseTag = [
+  "br",
+  "img",
+  "meta",
+  "input",
+  "embed",
+  "area",
+  "base",
+  "col",
+  "keygen",
+  "link",
+  "param",
+  "source"
+]
+
+#閉じタグが要らないタグか調べる
+examNonCloseTag = (word) ->
+  word = word.toString().split(/\s/)[0]
+  if word in nonCloseTag
+    return true
+  else
+    return false
+
 #現在のオブジェクトの親のオブジェクトを参照するメソッド
-parantObject　= (cson,stack) ->
+moveParantObject　= (cson,stack) ->
   nowobject = cson
   for objName in stack
     nowobject = nowobject[objName]
@@ -38,32 +62,29 @@ class MyPackageView
   getElement: ->
     @element
 
-  setView: (words) ->
+  setView: (lines) ->
     tagFlag = false
-    commentFlag = false
-    commentTag = /<!/
     cson = {}
     nowobject = cson
     stack = []
-    for word in words
-      match = word.match(/<!-*/)
-      if match then continue
+    for line in lines
+      match = line.match(/<!-*/)
+      if match? then continue
       tagword = ""
-      for c in word
+      for c in line
         if c == ">"
           tagFlag = false
-          tagword += c                  #>を追加
+          if examNonCloseTag(tagword) then continue #閉じタグか調査する
           stackword = stack.slice(-1)
-          stackword = stackword.toString().split(/\s/)
-          closeTag = new RegExp("<\/"+stackword[0])
+          stackword = stackword.toString().split(/\s/)[0]
+          closeTag = new RegExp("\/"+stackword)
           match = tagword.match(closeTag)
           if match? #閉じタグが一番下の層と一致したら
             stack.pop() #スタックから一つ取り出す
             # console.log stack
             # console.log JSON.stringify(cson)
-            nowobject = parantObject(cson,stack)  #親のオブジェクトに移動
+            nowobject = moveParantObject(cson,stack)  #親のオブジェクトに移動
           else  #一致しなかったら
-            tagword = tagword[1..-2] #<>を切り取る
             nowobject[tagword] = {}
             nowobject = nowobject[tagword]
             stack.push(tagword)
@@ -71,7 +92,6 @@ class MyPackageView
             # console.log JSON.stringify(cson)
           tagword = ""
         else if c == "<"
-          tagword += c
           tagFlag = true
         else
           if tagFlag #tagの中

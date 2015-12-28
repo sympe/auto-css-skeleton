@@ -3,8 +3,8 @@ MyPackageView = require './my-package-view'
 
 setContent = (myPackageView) ->
   editor = atom.workspace.getActiveTextEditor()
-  words = editor.getText().split(/\n/)
-  myPackageView.setView(words)
+  lines = editor.getText().split(/\n/)
+  myPackageView.setView(lines)
 
 module.exports = MyPackage =
   myPackageView: null
