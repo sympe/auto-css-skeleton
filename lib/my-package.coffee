@@ -31,9 +31,15 @@ module.exports = MyPackage =
 
   toggle: ->
 
-    # if @modalPanel.isVisible()
-    #   @modalPanel.hide()
-    # else
-    #   setContent(@myPackageView)
-    #   @modalPanel.show()
-    setContent(@myPackageView)
+    pane = atom.workspace.getActivePaneItem()
+    filename = pane.getTitle()
+    #htmlファイルか調査する
+    match = filename.match(/.+\.html/)
+    console.log filename
+    if match?
+      setContent(@myPackageView)
+    else
+      if @modalPanel.isVisible()
+        @modalPanel.hide()
+      else
+        @modalPanel.show()

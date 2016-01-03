@@ -77,8 +77,8 @@ class MyPackageView
     @element.classList.add('my-package')
 
     # Create message element
-    message = document.createElement('pre')
-    message.textContent = "The MyPackage package is Alive! It's ALIVE!"
+    message = document.createElement('p')
+    message.textContent = "htmlファイルではありません"
     message.classList.add('message')
     @element.appendChild(message)
 
@@ -158,10 +158,6 @@ class MyPackageView
     cssAbsolutePath = parent.path+"\\"+cssFileName
     console.log cssAbsolutePath
     console.log parent
-    # console.log directory
     console.log file
-    # console.log path
-    # console.log JSON.stringify(body)
     atom.workspace.open(cssAbsolutePath)
-    # @element.children[0].textContent = JSON.stringify(cson)
     # @element.children[0].textContent = JSON.stringify(body,null,"  ")
