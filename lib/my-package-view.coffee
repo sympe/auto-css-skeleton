@@ -45,7 +45,7 @@ moveParantObject　= (cson,stack) ->
 getHeadTag = (cson) ->
   runObject = cson
   if "head" of runObject
-    head = { "head" : Object.keys(runObject["head"]) }
+    head = Object.keys(runObject["head"])
     return head
   else
     propaties = Object.keys(runObject)
@@ -62,6 +62,12 @@ getBodyTag = (cson) ->
     propaties = Object.keys(runObject)
     for propaty in propaties
       return getBodyTag(runObject[propaty])
+
+getCssFileName = (head) ->
+  for item in head
+    if item.match(/link.+css.+/)
+      if item.match(/href=\"(\S+\.css)\"/)
+        return RegExp.$1
 
 module.exports =
 class MyPackageView
@@ -135,9 +141,27 @@ class MyPackageView
           if tagFlag #tagの中
             tagword += c
 
-    #headタグ抜き取る
+    #headとbodyをhtmlから取得
     head = getHeadTag(cson)
     body = getBodyTag(cson)
-    console.log JSON.stringify(head)
-    console.log JSON.stringify(body)
-    @element.children[0].textContent = JSON.stringify(cson)
+    #paneから現在開いているテキストエディタのpathを取得
+    pane = atom.workspace.getActivePaneItem()
+    path = pane.getPath()
+    #fileインスタンスを一つつくってpathを設定する
+    project = atom.project
+    directory = project.getDirectories()[0]
+    file = directory.getFile()
+    file.path = path
+    parent = file.getParent()
+    cssFileName = "example.css"
+    cssFileName = getCssFileName(head)
+    cssAbsolutePath = parent.path+"\\"+cssFileName
+    console.log cssAbsolutePath
+    console.log parent
+    # console.log directory
+    console.log file
+    # console.log path
+    # console.log JSON.stringify(body)
+    atom.workspace.open(cssAbsolutePath)
+    # @element.children[0].textContent = JSON.stringify(cson)
+    # @element.children[0].textContent = JSON.stringify(body,null,"  ")

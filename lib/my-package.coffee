@@ -31,8 +31,9 @@ module.exports = MyPackage =
 
   toggle: ->
 
-    if @modalPanel.isVisible()
-      @modalPanel.hide()
-    else
-      setContent(@myPackageView)
-      @modalPanel.show()
+    # if @modalPanel.isVisible()
+    #   @modalPanel.hide()
+    # else
+    #   setContent(@myPackageView)
+    #   @modalPanel.show()
+    setContent(@myPackageView)
