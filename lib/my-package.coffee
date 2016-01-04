@@ -1,10 +1,18 @@
 MyPackageView = require './my-package-view'
 {CompositeDisposable} = require 'atom'
 
-setContent = (myPackageView) ->
+goFunction = (myPackageView) ->
   editor = atom.workspace.getActiveTextEditor()
   lines = editor.getText().split(/\n/)
-  myPackageView.setView(lines)
+  myPackageView.openCssFile(lines)
+  # timer = setInterval ->
+  #   pane = atom.workspace.getActivePaneItem()
+  #   filename = pane.getTitle()
+  #   match = filename.match(/.+\.css/)
+  #   if match?
+  #     myPackageView.textEdit()
+  #     clearInterval(timer)
+  # , 300
 
 module.exports = MyPackage =
   myPackageView: null
@@ -35,9 +43,8 @@ module.exports = MyPackage =
     filename = pane.getTitle()
     #htmlファイルか調査する
     match = filename.match(/.+\.html/)
-    console.log filename
     if match?
-      setContent(@myPackageView)
+      goFunction(@myPackageView)
     else
       if @modalPanel.isVisible()
         @modalPanel.hide()

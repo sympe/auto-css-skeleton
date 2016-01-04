@@ -69,6 +69,14 @@ getCssFileName = (head) ->
       if item.match(/href=\"(\S+\.css)\"/)
         return RegExp.$1
 
+#cssFileに書き込む
+textEdit = (body) ->
+  cssFile = atom.workspace.getActiveTextEditor()
+  cssFile.setText(JSON.stringify(body,null,"  "))
+  # cssFilePath = cssFile.getPath()
+  # console.log cssFilePath
+
+
 module.exports =
 class MyPackageView
   constructor: (serializedState) ->
@@ -92,7 +100,7 @@ class MyPackageView
   getElement: ->
     @element
 
-  setView: (lines) ->
+  openCssFile: (lines) ->
     tagFlag = false
     cson = {}
     nowobject = cson
@@ -156,8 +164,16 @@ class MyPackageView
     cssFileName = "example.css"
     cssFileName = getCssFileName(head)
     cssAbsolutePath = parent.path+"\\"+cssFileName
-    console.log cssAbsolutePath
-    console.log parent
-    console.log file
+    # console.log cssAbsolutePath
+    # console.log parent
+    # console.log file
     atom.workspace.open(cssAbsolutePath)
+    timer = setInterval ->
+      pane = atom.workspace.getActivePaneItem()
+      filename = pane.getTitle()
+      match = filename.match(/.+\.css/)
+      if match?
+        textEdit(body)
+        clearInterval(timer)
+    , 300
     # @element.children[0].textContent = JSON.stringify(body,null,"  ")
