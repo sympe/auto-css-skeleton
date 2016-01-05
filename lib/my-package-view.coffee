@@ -91,7 +91,7 @@ researchBodyObject = (nowObject,stack,cssFile) ->
         cssStr = className+"\."+cls
         stack.push(cssStr)
         str = stack.join(" ")
-        str = str+" {\n\t\n}\n\n"
+        str = str+" {}\n\n"
         cssFile.insertText(str)
         if Object.keys(nowObject[nowkey]).length != 0
           researchBodyObject(nowObject[nowkey],stack,cssFile)
@@ -103,8 +103,11 @@ researchBodyObject = (nowObject,stack,cssFile) ->
       cssStr = nowkey
     stack.push(cssStr)
     str = stack.join(" ")
-    str = str+" {\n\t\n}\n\n"
+    str = str+" {}\n\n"
     cssFile.insertText(str)
+    #bodyは即pop
+    if nowkey == "body"
+      stack.pop()
     if Object.keys(nowObject[nowkey]).length != 0
       researchBodyObject(nowObject[nowkey],stack,cssFile)
     stack.pop()

@@ -2,7 +2,7 @@
 'context-menu':
   'atom-text-editor': [
     {
-      'label': 'Toggle my-package'
+      'label': 'Auto css Skeleton'
       'command': 'my-package:toggle'
     }
   ]
@@ -10,10 +10,10 @@
   {
     'label': 'Packages'
     'submenu': [
-      'label': 'my-package'
+      'label': 'Auto css Skeleton'
       'submenu': [
         {
-          'label': 'Toggle'
+          'label': 'Create'
           'command': 'my-package:toggle'
         }
       ]
