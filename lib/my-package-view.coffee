@@ -84,39 +84,51 @@ getCssFileName = (head) ->
 #cssFileに書き込む
 textEdit = (body) ->
   cssFile = atom.workspace.getActiveTextEditor()
-  for propaty in body
-    if propaty.match(/(.+)\sid=\"(.+)\"/)
-      propaty = RegExp.$1+"\#"+RegExp.$2
-      str = propaty+" {\n\t\n}\n\n"
+  stack = []
+  researchBodyObject(body,stack,cssFile)
+
+#オブジェクトから要素を取り出した配列を作成する
+# getBodyArray = (cson) ->
+#   returnArray = []
+#   returnArray = researchBodyObject(cson,returnArray)
+
+researchBodyObject = (nowObject,stack,cssFile) ->
+  nowObjectKeys = Object.keys(nowObject)
+  for nowkey in nowObjectKeys
+    if nowkey.match(/(.+)\sid=\"(.+)\"/)
+      cssStr = RegExp.$1+"\#"+RegExp.$2
+      stack.push(cssStr)
+      str = stack.join(" ")
+      str = str+" {\n\t\n}\n\n"
       cssFile.insertText(str)
-    else if propaty.match(/(.+)\sclass=\"(.+)\"/)
+    else if nowkey.match(/(.+)\sclass=\"(.+)\"/)
       className = RegExp.$1
       classes = RegExp.$2.split(/\s/)
       for cls in classes
-        propaty = className+"\."+cls
-        str = propaty+" {\n\t\n}\n\n"
+        cssStr = className+"\."+cls
+        stack.push(cssStr)
+        str = stack.join(" ")
+        str = str+" {\n\t\n}\n\n"
         cssFile.insertText(str)
-    else if propaty.match(/a\s.+=.+/)
-      str = "a {\n\t\n}\n\n"
+        if Object.keys(nowObject[nowkey]).length != 0
+          researchBodyObject(nowObject[nowkey],stack,cssFile)
+        stack.pop()
+      continue
+    else if nowkey.match(/a\s.+=.+/)
+      cssStr = "a"
+      stack.push(cssStr)
+      str = stack.join(" ")
+      str = str+" {\n\t\n}\n\n"
       cssFile.insertText(str)
     else
-      str = propaty+" {\n\t\n}\n\n"
+      cssStr = nowkey
+      stack.push(cssStr)
+      str = stack.join(" ")
+      str = str+" {\n\t\n}\n\n"
       cssFile.insertText(str)
-
-
-
-#オブジェクトから要素を取り出した配列を作成する
-getBodyArray = (cson) ->
-  returnArray = []
-  returnArray = researchBodyObject(cson,returnArray)
-
-researchBodyObject = (nowObject,returnArray) ->
-  nowObjectKeys = Object.keys(nowObject)
-  for nowkey in nowObjectKeys
-    returnArray.push(nowkey)
     if Object.keys(nowObject[nowkey]).length != 0
-      researchBodyObject(nowObject[nowkey],returnArray)
-  return returnArray
+      researchBodyObject(nowObject[nowkey],stack,cssFile)
+    stack.pop()
 
 module.exports =
 class MyPackageView
@@ -201,19 +213,18 @@ class MyPackageView
     cssFileName = "example.css"
     cssFileName = getCssFileName(head)
     cssAbsolutePath = parent.path+"\\"+cssFileName
-    bodyArray = []
-    bodyArray = getBodyArray(body)
-    bodyArray = unique(bodyArray)
+    # bodyArray = []
+    # bodyArray = getBodyArray(body)
+    # bodyArray = unique(bodyArray)
     # console.log JSON.stringify(body,null,"  ")
     console.log JSON.stringify(body)
-    console.log bodyArray
+    # console.log bodyArray
     atom.workspace.open(cssAbsolutePath)
     timer = setInterval ->
       pane = atom.workspace.getActivePaneItem()
       filename = pane.getTitle()
       match = filename.match(/.+\.css/)
       if match?
-        textEdit(bodyArray)
+        textEdit(body)
         clearInterval(timer)
     , 300
-    # @element.children[0].textContent = JSON.stringify(body,null,"  ")
