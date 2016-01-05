@@ -14,18 +14,6 @@ nonCloseTag = [
   "source"
 ]
 
-#配列の重複を消す
-unique = (array) ->
-  storage = {}
-  uniqueArray = []
-  i = 0
-  for i in array
-    value = i
-    if !(value of storage)
-      storage[value] = true
-      uniqueArray.push(value)
-  return uniqueArray
-
 #閉じタグが要らないタグか調べる
 examNonCloseTag = (word) ->
   word = word.toString().split(/\s/)[0]
@@ -76,10 +64,13 @@ getBodyTag = (cson) ->
       return getBodyTag(runObject[propaty])
 
 getCssFileName = (head) ->
+  cssFileName = "example.css"
   for item in head
     if item.match(/link.+css.+/)
       if item.match(/href=\"(\S+\.css)\"/)
-        return RegExp.$1
+        cssFileName = RegExp.$1
+        return cssFileName
+  return cssFileName
 
 #cssFileに書き込む
 textEdit = (body) ->
@@ -87,20 +78,12 @@ textEdit = (body) ->
   stack = []
   researchBodyObject(body,stack,cssFile)
 
-#オブジェクトから要素を取り出した配列を作成する
-# getBodyArray = (cson) ->
-#   returnArray = []
-#   returnArray = researchBodyObject(cson,returnArray)
-
+#オブジェクトを解析して実際に書き込むcssファイルに書き込むメソッド
 researchBodyObject = (nowObject,stack,cssFile) ->
   nowObjectKeys = Object.keys(nowObject)
   for nowkey in nowObjectKeys
     if nowkey.match(/(.+)\sid=\"(.+)\"/)
       cssStr = RegExp.$1+"\#"+RegExp.$2
-      stack.push(cssStr)
-      str = stack.join(" ")
-      str = str+" {\n\t\n}\n\n"
-      cssFile.insertText(str)
     else if nowkey.match(/(.+)\sclass=\"(.+)\"/)
       className = RegExp.$1
       classes = RegExp.$2.split(/\s/)
@@ -116,16 +99,12 @@ researchBodyObject = (nowObject,stack,cssFile) ->
       continue
     else if nowkey.match(/a\s.+=.+/)
       cssStr = "a"
-      stack.push(cssStr)
-      str = stack.join(" ")
-      str = str+" {\n\t\n}\n\n"
-      cssFile.insertText(str)
     else
       cssStr = nowkey
-      stack.push(cssStr)
-      str = stack.join(" ")
-      str = str+" {\n\t\n}\n\n"
-      cssFile.insertText(str)
+    stack.push(cssStr)
+    str = stack.join(" ")
+    str = str+" {\n\t\n}\n\n"
+    cssFile.insertText(str)
     if Object.keys(nowObject[nowkey]).length != 0
       researchBodyObject(nowObject[nowkey],stack,cssFile)
     stack.pop()
@@ -210,15 +189,9 @@ class MyPackageView
     file = directory.getFile()
     file.path = path
     parent = file.getParent()
-    cssFileName = "example.css"
     cssFileName = getCssFileName(head)
     cssAbsolutePath = parent.path+"\\"+cssFileName
-    # bodyArray = []
-    # bodyArray = getBodyArray(body)
-    # bodyArray = unique(bodyArray)
-    # console.log JSON.stringify(body,null,"  ")
-    console.log JSON.stringify(body)
-    # console.log bodyArray
+    #cssファイルを開く
     atom.workspace.open(cssAbsolutePath)
     timer = setInterval ->
       pane = atom.workspace.getActivePaneItem()
