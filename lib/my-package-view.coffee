@@ -14,6 +14,18 @@ nonCloseTag = [
   "source"
 ]
 
+#配列の重複を消す
+unique = (array) ->
+  storage = {}
+  uniqueArray = []
+  i = 0
+  for i in array
+    value = i
+    if !(value of storage)
+      storage[value] = true
+      uniqueArray.push(value)
+  return uniqueArray
+
 #閉じタグが要らないタグか調べる
 examNonCloseTag = (word) ->
   word = word.toString().split(/\s/)[0]
@@ -72,10 +84,39 @@ getCssFileName = (head) ->
 #cssFileに書き込む
 textEdit = (body) ->
   cssFile = atom.workspace.getActiveTextEditor()
-  cssFile.setText(JSON.stringify(body,null,"  "))
-  # cssFilePath = cssFile.getPath()
-  # console.log cssFilePath
+  for propaty in body
+    if propaty.match(/(.+)\sid=\"(.+)\"/)
+      propaty = RegExp.$1+"\#"+RegExp.$2
+      str = propaty+" {\n\t\n}\n\n"
+      cssFile.insertText(str)
+    else if propaty.match(/(.+)\sclass=\"(.+)\"/)
+      className = RegExp.$1
+      classes = RegExp.$2.split(/\s/)
+      for cls in classes
+        propaty = className+"\."+cls
+        str = propaty+" {\n\t\n}\n\n"
+        cssFile.insertText(str)
+    else if propaty.match(/a\s.+=.+/)
+      str = "a {\n\t\n}\n\n"
+      cssFile.insertText(str)
+    else
+      str = propaty+" {\n\t\n}\n\n"
+      cssFile.insertText(str)
 
+
+
+#オブジェクトから要素を取り出した配列を作成する
+getBodyArray = (cson) ->
+  returnArray = []
+  returnArray = researchBodyObject(cson,returnArray)
+
+researchBodyObject = (nowObject,returnArray) ->
+  nowObjectKeys = Object.keys(nowObject)
+  for nowkey in nowObjectKeys
+    returnArray.push(nowkey)
+    if Object.keys(nowObject[nowkey]).length != 0
+      researchBodyObject(nowObject[nowkey],returnArray)
+  return returnArray
 
 module.exports =
 class MyPackageView
@@ -133,15 +174,11 @@ class MyPackageView
           match = tagword.match(closeTag)
           if match? #閉じタグが一番下の層と一致したら
             stack.pop() #スタックから一つ取り出す
-            # console.log stack
-            # console.log JSON.stringify(cson)
             nowobject = moveParantObject(cson,stack)  #親のオブジェクトに移動
           else  #一致しなかったら
             nowobject[tagword] = {}
             nowobject = nowobject[tagword]
             stack.push(tagword)
-            # console.log stack
-            # console.log JSON.stringify(cson)
           tagword = ""
         else if c == "<"
           tagFlag = true
@@ -164,16 +201,19 @@ class MyPackageView
     cssFileName = "example.css"
     cssFileName = getCssFileName(head)
     cssAbsolutePath = parent.path+"\\"+cssFileName
-    # console.log cssAbsolutePath
-    # console.log parent
-    # console.log file
+    bodyArray = []
+    bodyArray = getBodyArray(body)
+    bodyArray = unique(bodyArray)
+    # console.log JSON.stringify(body,null,"  ")
+    console.log JSON.stringify(body)
+    console.log bodyArray
     atom.workspace.open(cssAbsolutePath)
     timer = setInterval ->
       pane = atom.workspace.getActivePaneItem()
       filename = pane.getTitle()
       match = filename.match(/.+\.css/)
       if match?
-        textEdit(body)
+        textEdit(bodyArray)
         clearInterval(timer)
     , 300
     # @element.children[0].textContent = JSON.stringify(body,null,"  ")
