@@ -83,32 +83,32 @@ getCssFileName = (head) ->
   return cssFileName
 
 #cssFileに書き込む
-selecterArray = []
 textEdit = (body) ->
   cssFile = atom.workspace.getActiveTextEditor()
+  cssFile.moveToTop()  #cursorを一番上に
   rgexp = new RegExp(/^\n/gm)
   cssFileText = cssFile.getText().replace(rgexp,"")
   cssFileTextSplit = cssFileText.split(/\s{}/)
-  console.log cssFileTextSplit
   stack = []
-  researchBodyObject(body,stack)
+  selecterArray = []
+  researchBodyObject(body,stack,selecterArray)
   selecterArray = unique(selecterArray)
+  # console.log selecterArray
   for value in selecterArray
-    console.log value
     reg = new RegExp(value)
     matchFlag = false
     for cssFileTextSplitValue in cssFileTextSplit
       if cssFileTextSplitValue.match(reg)
         matchFlag = true
-        console.log "match"
+        cssFile.moveDown(2) #cursorを2行下げるマジックナンバーだorz
         break
     if !matchFlag
-      console.log "unmatch"
       selecterValue = value+" {}\n\n"
       cssFile.insertText(selecterValue)
+  # console.log cssFile.getCursorBufferPosition()
 
 #オブジェクトを解析して実際に書き込むcssファイルに書き込むメソッド
-researchBodyObject = (nowObject,stack) ->
+researchBodyObject = (nowObject,stack,selecterArray) ->
   nowObjectKeys = Object.keys(nowObject)
   for nowkey in nowObjectKeys
     if nowkey.match(/(.+)\sid=\"(.+)\"/)
@@ -122,7 +122,7 @@ researchBodyObject = (nowObject,stack) ->
         str = stack.join(" ")
         selecterArray.push(str)
         if Object.keys(nowObject[nowkey]).length != 0
-          researchBodyObject(nowObject[nowkey],stack)
+          researchBodyObject(nowObject[nowkey],stack,selecterArray)
         stack.pop()
       continue
     else if nowkey.match(/a\s.+=.+/)
@@ -136,7 +136,7 @@ researchBodyObject = (nowObject,stack) ->
     if nowkey == "body"
       stack.pop()
     if Object.keys(nowObject[nowkey]).length != 0
-      researchBodyObject(nowObject[nowkey],stack)
+      researchBodyObject(nowObject[nowkey],stack,selecterArray)
     stack.pop()
 
 module.exports =
