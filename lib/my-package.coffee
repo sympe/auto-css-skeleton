@@ -5,14 +5,6 @@ goFunction = (myPackageView) ->
   editor = atom.workspace.getActiveTextEditor()
   lines = editor.getText().split(/\n/)
   myPackageView.openCssFile(lines)
-  # timer = setInterval ->
-  #   pane = atom.workspace.getActivePaneItem()
-  #   filename = pane.getTitle()
-  #   match = filename.match(/.+\.css/)
-  #   if match?
-  #     myPackageView.textEdit()
-  #     clearInterval(timer)
-  # , 300
 
 module.exports = MyPackage =
   myPackageView: null

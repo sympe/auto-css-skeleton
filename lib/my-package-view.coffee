@@ -14,6 +14,16 @@ nonCloseTag = [
   "source"
 ]
 
+#配列の重複を消す
+unique = (array) ->
+  storage = {}
+  uniqueArray = []
+  for value in array
+    if !(value of storage)
+      storage[value] = true
+      uniqueArray.push(value)
+  return uniqueArray
+
 #閉じタグが要らないタグか調べる
 examNonCloseTag = (word) ->
   word = word.toString().split(/\s/)[0]
@@ -73,13 +83,32 @@ getCssFileName = (head) ->
   return cssFileName
 
 #cssFileに書き込む
+selecterArray = []
 textEdit = (body) ->
   cssFile = atom.workspace.getActiveTextEditor()
+  rgexp = new RegExp(/^\n/gm)
+  cssFileText = cssFile.getText().replace(rgexp,"")
+  cssFileTextSplit = cssFileText.split(/\s{}/)
+  console.log cssFileTextSplit
   stack = []
-  researchBodyObject(body,stack,cssFile)
+  researchBodyObject(body,stack)
+  selecterArray = unique(selecterArray)
+  for value in selecterArray
+    console.log value
+    reg = new RegExp(value)
+    matchFlag = false
+    for cssFileTextSplitValue in cssFileTextSplit
+      if cssFileTextSplitValue.match(reg)
+        matchFlag = true
+        console.log "match"
+        break
+    if !matchFlag
+      console.log "unmatch"
+      selecterValue = value+" {}\n\n"
+      cssFile.insertText(selecterValue)
 
 #オブジェクトを解析して実際に書き込むcssファイルに書き込むメソッド
-researchBodyObject = (nowObject,stack,cssFile) ->
+researchBodyObject = (nowObject,stack) ->
   nowObjectKeys = Object.keys(nowObject)
   for nowkey in nowObjectKeys
     if nowkey.match(/(.+)\sid=\"(.+)\"/)
@@ -91,10 +120,9 @@ researchBodyObject = (nowObject,stack,cssFile) ->
         cssStr = className+"\."+cls
         stack.push(cssStr)
         str = stack.join(" ")
-        str = str+" {}\n\n"
-        cssFile.insertText(str)
+        selecterArray.push(str)
         if Object.keys(nowObject[nowkey]).length != 0
-          researchBodyObject(nowObject[nowkey],stack,cssFile)
+          researchBodyObject(nowObject[nowkey],stack)
         stack.pop()
       continue
     else if nowkey.match(/a\s.+=.+/)
@@ -103,13 +131,12 @@ researchBodyObject = (nowObject,stack,cssFile) ->
       cssStr = nowkey
     stack.push(cssStr)
     str = stack.join(" ")
-    str = str+" {}\n\n"
-    cssFile.insertText(str)
+    selecterArray.push(str)
     #bodyは即pop
     if nowkey == "body"
       stack.pop()
     if Object.keys(nowObject[nowkey]).length != 0
-      researchBodyObject(nowObject[nowkey],stack,cssFile)
+      researchBodyObject(nowObject[nowkey],stack)
     stack.pop()
 
 module.exports =
@@ -138,12 +165,11 @@ class MyPackageView
   openCssFile: (lines) ->
     tagFlag = false
     cson = {}
-    nowobject = cson
     stack = []
     commentFlag = "noncomment"
+    nowobject = cson
     for line in lines
-      match = line.match(/<!DOCTYPE/) #ドキュメントタイプ宣言とばす
-      if match? then continue
+      if line.match(/<!DOCTYPE/i) then continue #ドキュメントタイプ宣言とばす
       tagword = ""
       for c in line
         if c == ">"
@@ -157,16 +183,14 @@ class MyPackageView
             continue
           else if commentFlag == "commenting"
             continue
-          match = tagword.match(/link.+(css)+/) #cssタグだったら
-          if match?
+          if tagword.match(/link.+(css)+/) #cssタグだったら
             nowobject[tagword] = {}
             tagword = ""
             continue
           stackword = stack.slice(-1)
           stackword = stackword.toString().split(/\s/)[0]
           closeTag = new RegExp("\/"+stackword)
-          match = tagword.match(closeTag)
-          if match? #閉じタグが一番下の層と一致したら
+          if tagword.match(closeTag) #閉じタグが一番下の層と一致したら
             stack.pop() #スタックから一つ取り出す
             nowobject = moveParantObject(cson,stack)  #親のオブジェクトに移動
           else  #一致しなかったら
