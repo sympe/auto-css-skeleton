@@ -100,6 +100,32 @@ researchCssBlock = (cssFileTextSplit) ->
       continueFlag = elements.length-1
   return cssFileTextSplit
 
+#空行とセレクタ内部を読み飛ばす
+skipSpaceAndSelecter = (cssFile) ->
+  roopCount = 0
+  while roopCount < 1000 #1つのセレクタには1000行までとする
+    cssFile.selectToEndOfLine()
+    line =  cssFile.getSelectedText()
+    if line.match(/.*\}/)
+      break
+    else
+      cssFile.moveDown(1)
+      cssFile.moveToFirstCharacterOfLine()
+    roopCount += 1
+  cssFile.moveDown(1) #cursorを1行下げる
+  cssFile.moveToFirstCharacterOfLine()
+  roopCount = 0
+  while roopCount < 20
+    cssFile.selectToEndOfLine()
+    line =  cssFile.getSelectedText()
+    if line.match(/^\S/)
+      cssFile.moveToFirstCharacterOfLine()
+      break
+    else
+      cssFile.moveDown(1)
+      cssFile.moveToFirstCharacterOfLine()
+    roopCount += 1
+    
 #cssFileに書き込む
 textEdit = (body) ->
   cssFile = atom.workspace.getActiveTextEditor()
@@ -117,29 +143,7 @@ textEdit = (body) ->
     matchFlag = false
     for cssFileTextSplitValue in cssFileTextSplit
       if cssFileTextSplitValue.match(reg)
-        roopCount = 0
-        while roopCount < 1000 #1つのセレクタには1000行までとする
-          cssFile.selectToEndOfLine()
-          line =  cssFile.getSelectedText()
-          if line.match(/.*\}/)
-            break
-          else
-            cssFile.moveDown(1)
-            cssFile.moveToFirstCharacterOfLine()
-          roopCount += 1
-        cssFile.moveDown(1) #cursorを1行下げる
-        cssFile.moveToFirstCharacterOfLine()
-        roopCount = 0
-        while roopCount < 20
-          cssFile.selectToEndOfLine()
-          line =  cssFile.getSelectedText()
-          if line.match(/^\S/)
-            cssFile.moveToFirstCharacterOfLine()
-            break
-          else
-            cssFile.moveDown(1)
-            cssFile.moveToFirstCharacterOfLine()
-          roopCount += 1
+        skipSpaceAndSelecter(cssFile)
         matchFlag = true
         break
     if !matchFlag
