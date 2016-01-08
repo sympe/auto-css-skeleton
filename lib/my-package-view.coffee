@@ -82,32 +82,72 @@ getCssFileName = (head) ->
         return cssFileName
   return cssFileName
 
+#cssのブロック構想を解析
+researchCssBlock = (cssFileTextSplit) ->
+  continueFlag = 0
+  for element,i in cssFileTextSplit
+    if continueFlag > 0
+      continueFlag -= 1
+      continue
+    if element.match(/([\s\S]*)\{[\s\S]*\}([\s\S]*)/)
+      cssFileTextSplit.splice(i,1)
+      elements = element.split(/\s*\{/)
+      for elementd,j in elements
+        if elementd.match(/[\s\S]*\}([\s\S]*)/)
+          cssFileTextSplit.splice(i+j,0,RegExp.$1)
+        else
+          cssFileTextSplit.splice(i+j,0,elementd)
+      continueFlag = elements.length-1
+  return cssFileTextSplit
+
 #cssFileに書き込む
 textEdit = (body) ->
   cssFile = atom.workspace.getActiveTextEditor()
   cssFile.moveToTop()  #cursorを一番上に
-  rgexp = new RegExp(/^\n/gm)
+  rgexp = new RegExp(/\n/gm)
   cssFileText = cssFile.getText().replace(rgexp,"")
-  cssFileTextSplit = cssFileText.split(/\s{}/)
+  cssFileTextSplit = cssFileText.split(/\s*\{.*\}/m)
+  cssFileTextSplit = researchCssBlock(cssFileTextSplit)
   stack = []
   selecterArray = []
   researchBodyObject(body,stack,selecterArray)
   selecterArray = unique(selecterArray)
-  # console.log selecterArray
   for value in selecterArray
     reg = new RegExp(value)
     matchFlag = false
     for cssFileTextSplitValue in cssFileTextSplit
       if cssFileTextSplitValue.match(reg)
+        roopCount = 0
+        while roopCount < 1000 #1つのセレクタには1000行までとする
+          cssFile.selectToEndOfLine()
+          line =  cssFile.getSelectedText()
+          if line.match(/.*\}/)
+            break
+          else
+            cssFile.moveDown(1)
+            cssFile.moveToFirstCharacterOfLine()
+          roopCount += 1
+        cssFile.moveDown(1) #cursorを1行下げる
+        cssFile.moveToFirstCharacterOfLine()
+        roopCount = 0
+        while roopCount < 20
+          cssFile.selectToEndOfLine()
+          line =  cssFile.getSelectedText()
+          if line.match(/^\S/)
+            cssFile.moveToFirstCharacterOfLine()
+            break
+          else
+            cssFile.moveDown(1)
+            cssFile.moveToFirstCharacterOfLine()
+          roopCount += 1
         matchFlag = true
-        cssFile.moveDown(2) #cursorを2行下げるマジックナンバーだorz
         break
     if !matchFlag
       selecterValue = value+" {}\n\n"
       cssFile.insertText(selecterValue)
   # console.log cssFile.getCursorBufferPosition()
 
-#オブジェクトを解析して実際に書き込むcssファイルに書き込むメソッド
+#オブジェクトを解析して実際に書き込むcssファイルに書き込むメソッド（再帰処理）
 researchBodyObject = (nowObject,stack,selecterArray) ->
   nowObjectKeys = Object.keys(nowObject)
   for nowkey in nowObjectKeys
@@ -148,7 +188,7 @@ class MyPackageView
 
     # Create message element
     message = document.createElement('p')
-    message.textContent = "htmlファイルではありません"
+    message.textContent = "This file is not html."
     message.classList.add('message')
     @element.appendChild(message)
 
