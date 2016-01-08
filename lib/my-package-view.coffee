@@ -100,57 +100,6 @@ researchCssBlock = (cssFileTextSplit) ->
       continueFlag = elements.length-1
   return cssFileTextSplit
 
-#空行とセレクタ内部を読み飛ばす
-skipSpaceAndSelecter = (cssFile) ->
-  roopCount = 0
-  while roopCount < 1000 #1つのセレクタには1000行までとする
-    cssFile.selectToEndOfLine()
-    line =  cssFile.getSelectedText()
-    if line.match(/.*\}/)
-      break
-    else
-      cssFile.moveDown(1)
-      cssFile.moveToFirstCharacterOfLine()
-    roopCount += 1
-  cssFile.moveDown(1) #cursorを1行下げる
-  cssFile.moveToFirstCharacterOfLine()
-  roopCount = 0
-  while roopCount < 20
-    cssFile.selectToEndOfLine()
-    line =  cssFile.getSelectedText()
-    if line.match(/^\S/)
-      cssFile.moveToFirstCharacterOfLine()
-      break
-    else
-      cssFile.moveDown(1)
-      cssFile.moveToFirstCharacterOfLine()
-    roopCount += 1
-    
-#cssFileに書き込む
-textEdit = (body) ->
-  cssFile = atom.workspace.getActiveTextEditor()
-  cssFile.moveToTop()  #cursorを一番上に
-  rgexp = new RegExp(/\n/gm)
-  cssFileText = cssFile.getText().replace(rgexp,"")
-  cssFileTextSplit = cssFileText.split(/\s*\{.*\}/m)
-  cssFileTextSplit = researchCssBlock(cssFileTextSplit)
-  stack = []
-  selecterArray = []
-  researchBodyObject(body,stack,selecterArray)
-  selecterArray = unique(selecterArray)
-  for value in selecterArray
-    reg = new RegExp(value)
-    matchFlag = false
-    for cssFileTextSplitValue in cssFileTextSplit
-      if cssFileTextSplitValue.match(reg)
-        skipSpaceAndSelecter(cssFile)
-        matchFlag = true
-        break
-    if !matchFlag
-      selecterValue = value+" {}\n\n"
-      cssFile.insertText(selecterValue)
-  # console.log cssFile.getCursorBufferPosition()
-
 #オブジェクトを解析して実際に書き込むcssファイルに書き込むメソッド（再帰処理）
 researchBodyObject = (nowObject,stack,selecterArray) ->
   nowObjectKeys = Object.keys(nowObject)
@@ -182,6 +131,95 @@ researchBodyObject = (nowObject,stack,selecterArray) ->
     if Object.keys(nowObject[nowkey]).length != 0
       researchBodyObject(nowObject[nowkey],stack,selecterArray)
     stack.pop()
+
+#空行とセレクタ内部を読み飛ばす
+skipSpaceAndSelecter = (cssFile) ->
+  roopCount = 0
+  while roopCount < 1000 #1つのセレクタには1000行までとする
+    cssFile.selectToEndOfLine()
+    line =  cssFile.getSelectedText()
+    if line.match(/.*\}/)
+      break
+    else
+      cssFile.moveDown(1)
+      cssFile.moveToFirstCharacterOfLine()
+    roopCount += 1
+  cssFile.moveDown(1) #cursorを1行下げる
+  cssFile.moveToFirstCharacterOfLine()
+  roopCount = 0
+  while roopCount < 20
+    cssFile.selectToEndOfLine()
+    line =  cssFile.getSelectedText()
+    if line.match(/^\S/)
+      cssFile.moveToFirstCharacterOfLine()
+      break
+    else
+      cssFile.moveDown(1)
+      cssFile.moveToFirstCharacterOfLine()
+    roopCount += 1
+
+#cssFileに書き込む
+textEdit = (body) ->
+  cssFile = atom.workspace.getActiveTextEditor()
+  cssFile.moveToTop()  #cursorを一番上に
+  rgexp = new RegExp(/\n/gm)
+  cssFileText = cssFile.getText().replace(rgexp,"")
+  cssFileTextSplit = cssFileText.split(/\s*\{.*\}/m)
+  cssFileTextSplit = researchCssBlock(cssFileTextSplit)
+  #復帰文字を消す
+  for cssText,i in cssFileTextSplit
+    if cssText.match(/\r/)
+      cssTexts = cssText.split(/\r/)
+      if cssTexts[2]
+        cssFileTextSplit[i] = cssTexts[2]
+      else
+        cssFileTextSplit.splice(i,1)
+  stack = []
+  selecterArray = []
+  researchBodyObject(body,stack,selecterArray)
+  selecterArray = unique(selecterArray)
+  #既にcssFileに記述されているか調べる
+  for value in selecterArray
+    if value in cssFileTextSplit
+      skipSpaceAndSelecter(cssFile)
+    else
+      selecterValue = value+" {}\n\n"
+      cssFile.insertText(selecterValue)
+  #htmlタグがあるかどうか調べる（無かったら消す）
+  cssFile.moveToTop()  #cursorを一番上に
+  for cssFileTextSplitValue in cssFileTextSplit
+    if cssFileTextSplitValue == ""
+      continue
+    if cssFileTextSplitValue in selecterArray
+      skipSpaceAndSelecter(cssFile)
+      # console.log "match"
+    else
+      roopCount = 0
+      while roopCount < 10 #1つのセレクタには1000行までとする
+        cssFile.selectToEndOfLine()
+        line =  cssFile.getSelectedText()
+        if line.match(/.*\}/)
+          cssFile.deleteLine()
+          break
+        else
+          cssFile.deleteLine()
+          cssFile.moveToFirstCharacterOfLine()
+        roopCount += 1
+      # cssFile.moveDown(1) #cursorを1行下げる
+      cssFile.moveToFirstCharacterOfLine()
+      roopCount = 0
+      while roopCount < 20
+        cssFile.selectToEndOfLine()
+        line =  cssFile.getSelectedText()
+        if line.match(/^\S/)
+          cssFile.moveToFirstCharacterOfLine()
+          break
+        else
+          cssFile.deleteLine()
+          cssFile.moveToFirstCharacterOfLine()
+        roopCount += 1
+
+
 
 module.exports =
 class MyPackageView
