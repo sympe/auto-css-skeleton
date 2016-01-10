@@ -11,7 +11,10 @@
   "activationCommands": {
     "atom-workspace": "my-package:toggle"
   },
-  "repository": "https://github.com/sypme/css-skeleton-maker",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/sympe/css-skeleton-maker.git"
+  },
   "license": "MIT",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"
