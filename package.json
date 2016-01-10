@@ -1,7 +1,7 @@
 {
   "name": "css-skeleton-maker",
   "main": "./lib/my-package",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "It will automatically generate a css skeleton related to your html.",
   "keywords": [
     "css",
@@ -12,13 +12,12 @@
     "atom-workspace": "my-package:toggle"
   },
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/sympe/css-skeleton-maker.git"
+    "type": "git",
+    "url": "https://github.com/sympe/css-skeleton-maker.git"
   },
   "license": "MIT",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
