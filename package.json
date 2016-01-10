@@ -5,7 +5,8 @@
   "description": "It will automatically generate a css skeleton related to your html.",
   "keywords": [
     "css",
-    "skeleton"
+    "skeleton",
+    "maker"
   ],
   "activationCommands": {
     "atom-workspace": "my-package:toggle"
