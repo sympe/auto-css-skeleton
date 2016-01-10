@@ -1,4 +1,4 @@
-# auto-css-skeleton
+# css-skeleton-maker
 
 htmlにリンク付けしたcssのスケルトンを自動生成するパッケージ
 #### memo
