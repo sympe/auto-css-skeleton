@@ -10,7 +10,7 @@
   "activationCommands": {
     "atom-workspace": "my-package:toggle"
   },
-  "repository": "https://github.com/sypme/auto-css-skeleton",
+  "repository": "https://github.com/sypme/css-skeleton-maker",
   "license": "MIT",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"
