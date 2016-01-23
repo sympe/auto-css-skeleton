@@ -11,4 +11,5 @@ htmlにリンク付けしたcssのスケルトンを自動生成するパッケ�
 7. htmlにコメントがある場合はないものとして判断される
 
 ## Description
+push ctrl + alt + l button
 ## Demo
