@@ -34,7 +34,6 @@ examNonCloseTag = (word) ->
 
 #コメントタグか調べる
 examCommentTag = (word) ->
-  console.log word
   if word.match(/^!--/)
   else
     return "noncomment"
@@ -81,7 +80,7 @@ getCssFileName = (head) ->
         return cssFileName
   return cssFileName
 
-#cssのブロック構想を解析
+#cssのブロック構造を解析
 researchCssBlock = (cssFileTextSplit) ->
   continueFlag = 0
   for element,i in cssFileTextSplit
@@ -99,7 +98,7 @@ researchCssBlock = (cssFileTextSplit) ->
       continueFlag = elements.length-1
   return cssFileTextSplit
 
-#オブジェクトを解析して実際に書き込むcssファイルに書き込むメソッド（再帰処理）
+#bodyオブジェクトを解析して実際にcssファイルに書き込むメソッド（再帰処理）
 researchBodyObject = (nowObject,stack,selecterArray) ->
   nowObjectKeys = Object.keys(nowObject)
   for nowkey in nowObjectKeys
@@ -124,7 +123,6 @@ researchBodyObject = (nowObject,stack,selecterArray) ->
     stack.push(cssStr)
     str = stack.join(" ")
     selecterArray.push(str)
-    #bodyは即pop
     if nowkey == "body"
       stack.pop()
     if Object.keys(nowObject[nowkey]).length != 0
@@ -134,22 +132,20 @@ researchBodyObject = (nowObject,stack,selecterArray) ->
 getCssFileText = (cssFile) ->
   rgexp = new RegExp(/\n/gm)
   cssFileText = cssFile.getText().replace(rgexp,"")
-  cssFileTextArray = cssFileText.split(/\s*\{.*\}/m)
+  cssFileTextArray = cssFileText.split(/\s*\{[^}]*\}/m)
   cssFileTextArray = researchCssBlock(cssFileTextArray)
-  #復帰文字を消す
+  #復帰文字を消す(for cr+lf)
   for cssText,i in cssFileTextArray
     if typeof(cssText) != "string"
       continue
     if cssText.match(/\r/)
       cssTexts = cssText.split(/\r/)
-      # console.log cssTexts
       cssFileTextArray[i] = cssTexts[cssTexts.length-1]
   return cssFileTextArray
 
 #空行とセレクタ内部を読み飛ばす
 skipSpaceAndSelecter = (cssFile) ->
-  roopCount = 0
-  while roopCount < 1000 #1つのセレクタには1000行までとする
+  for i in [0...1000] #1つのセレクタには1000行までとする
     cssFile.selectToEndOfLine()
     line =  cssFile.getSelectedText()
     if line.match(/.*\}/)
@@ -157,11 +153,9 @@ skipSpaceAndSelecter = (cssFile) ->
     else
       cssFile.moveDown(1)
       cssFile.moveToFirstCharacterOfLine()
-    roopCount += 1
   cssFile.moveDown(1) #cursorを1行下げる
   cssFile.moveToFirstCharacterOfLine()
-  roopCount = 0
-  while roopCount < 20
+  for i in [0...20]
     cssFile.selectToEndOfLine()
     line =  cssFile.getSelectedText()
     if line.match(/^\S/)
@@ -170,11 +164,9 @@ skipSpaceAndSelecter = (cssFile) ->
     else
       cssFile.moveDown(1)
       cssFile.moveToFirstCharacterOfLine()
-    roopCount += 1
 
-deleteSpceAndSelecter = (cssFile) ->
-  roopCount = 0
-  while roopCount < 1000 #1つのセレクタには1000行までとする
+deleteSpaceAndSelecter = (cssFile) ->
+  for i in [0...1000] #1つのセレクタには1000行までとする
     cssFile.selectToEndOfLine()
     line =  cssFile.getSelectedText()
     if line.match(/.*\}/)
@@ -183,11 +175,8 @@ deleteSpceAndSelecter = (cssFile) ->
     else
       cssFile.deleteLine()
       cssFile.moveToFirstCharacterOfLine()
-    roopCount += 1
-  # cssFile.moveDown(1) #cursorを1行下げるz
   cssFile.moveToFirstCharacterOfLine()
-  roopCount = 0
-  while roopCount < 100
+  for i in [0...20]
     cssFile.selectToEndOfLine()
     line =  cssFile.getSelectedText()
     if line.match(/^\S/)
@@ -196,7 +185,6 @@ deleteSpceAndSelecter = (cssFile) ->
     else
       cssFile.deleteLine()
       cssFile.moveToFirstCharacterOfLine()
-    roopCount += 1
 
 #cssFileに書き込む
 textEdit = (body) ->
@@ -207,7 +195,6 @@ textEdit = (body) ->
   selecterArray = []
   researchBodyObject(body,stack,selecterArray)
   selecterArray = unique(selecterArray)
-  # console.log selecterArray
   #既にcssFileに記述されているか調べる
   for value in selecterArray
     if value in cssFileTextArray
@@ -215,20 +202,17 @@ textEdit = (body) ->
     else
       selecterValue = value+" {}\n\n"
       cssFile.insertText(selecterValue)
-  #htmlタグがあるかどうか調べる（無かったら消す）
   cssFile = atom.workspace.getActiveTextEditor() #もう一度cssfileを読む
-  cssFile.moveToTop()  #cursorを一番上に
+  cssFile.moveToTop()
   cssFileTextArray = getCssFileText(cssFile)
-  cssFile.moveToTop()  #cursorを一番上に
+  cssFile.moveToTop()
   for cssFileTextValue in cssFileTextArray
-    # console.log cssFileTextValue
     if cssFileTextValue == ""
       continue
     if cssFileTextValue in selecterArray
       skipSpaceAndSelecter(cssFile)
-      # console.log "match"
     else
-      deleteSpceAndSelecter(cssFile)
+      deleteSpaceAndSelecter(cssFile)
 
 
 module.exports =
@@ -261,18 +245,16 @@ class MyPackageView
     commentFlag = "noncomment"
     nowobject = cson
     for line in lines
-      if line.match(/<!DOCTYPE/i) then continue #ドキュメントタイプ宣言とばす
+      if line.match(/<!DOCTYPE/i) then continue
       if commentFlag == "noncomment"
         tagword = ""
       for c in line
-        console.log c
         if c == ">"
           tagFlag = false
           if examNonCloseTag(tagword)
             tagword = ""
             continue
           commentFlag = examCommentTag(tagword)
-          console.log commentFlag
           if commentFlag == "commentFin"
             tagword = ""
             continue
@@ -280,7 +262,7 @@ class MyPackageView
             tagword += c
             tagFlag = true
             continue
-          if tagword.match(/link.+(css)+/) #cssタグだったら
+          if tagword.match(/link.+(css)+/)
             nowobject[tagword] = {}
             tagword = ""
             continue
@@ -316,7 +298,7 @@ class MyPackageView
     file.path = path
     parent = file.getParent()
     cssFileName = getCssFileName(head)
-    cssAbsolutePath = parent.path+"\\"+cssFileName
+    cssAbsolutePath = parent.path+"/"+cssFileName
     #cssファイルを開く
     atom.workspace.open(cssAbsolutePath)
     timer = setInterval ->
