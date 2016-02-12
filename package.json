@@ -1,11 +1,12 @@
 {
   "name": "css-skeleton-maker",
   "main": "./lib/my-package",
-  "version": "0.1.2",
-  "description": "It will automatically generate a css skeleton related to your html.",
+  "version": "0.1.3",
+  "description": "It will automatically generate a css selector related to your html.",
   "keywords": [
     "css",
     "skeleton",
+    "selector",
     "maker"
   ],
   "activationCommands": {
